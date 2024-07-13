@@ -1,0 +1,27 @@
+---
+- name: Update packages and versions
+  hosts: all
+  become: yes
+  tasks:
+    - name: apt update and upgrade
+      ansible.builtin.apt:
+        update-cache: true
+        upgrade: yes
+- name: Install container runtime
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install containerd
+      ansible.builtin.apt:
+        pkg:
+        - containerd
+    - name: Check containerd status
+      shell: systemctl status containerd | grep active
+      register: check_status
+    - debug: msg={{check_status.stdout_lines}}
+    - name: Create directory for containerd configs
+      ansible.builtin.file:
+        path: /etc/containerd
+        state: directory
+    - name: Creating the containerd config and copying it to the dir
+      shell: containerd config default | sudo tee /etc/containerd/config.toml
